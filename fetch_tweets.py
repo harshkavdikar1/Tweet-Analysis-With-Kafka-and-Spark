@@ -19,14 +19,18 @@ class Listener(tweepy.StreamListener):
         self.producer.send(topic_name, value={"text":text})
         self.producer.flush()
 
+    def on_error(self, status_code):
+        if status_code == 420:
+            #returning False in on_error disconnects the stream
+            return False
+
 class StreamTweets():
 
     def __init__(self, auth, listener):
         self.stream = tweepy.Stream(auth, listener)
 
-    def start(self, keywords):
-        self.stream.filter(track = keywords)
-
+    def start(self, location, language, track_keywords):
+        self.stream.filter(languages = language, track = track_keywords, locations=location)
 
 
 if __name__ == "__main__":
@@ -48,4 +52,8 @@ if __name__ == "__main__":
 
     stream = StreamTweets(auth, listener)
 
-    stream.start(["#"])
+    #San Fransisco 
+    location = [-122.75,36.8,-121.75,37.8]
+    language = ['en']
+    track_keywords = ['#']
+    stream.start(location, language, track_keywords)
