@@ -1,23 +1,51 @@
-from kafka import KafkaConsumer
-import json
+from pyspark import SparkContext, SparkConf
+from pyspark.streaming import StreamingContext
+from pyspark.streaming.kafka import KafkaUtils
+import json, os
 
 topic_name = "twitter"
 
 if __name__ == "__main__":
 
-    # bootstrap_servers = [‘localhost:9092’]  : same as our producer
-    # auto_offset_reset = ’earliest’          : one of the most important arguments. It handles where the consumer restarts reading after breaking down or being turned off and can be set either to earliest or latest. When set to latest, the consumer starts reading at the end of the log. When set to earliest, the consumer starts reading at the latest committed offset. And that’s exactly what we want here.
-    # enable_auto_commit = True               : makes sure the consumer commits its read offset every interval.
-    # auto_commit_interval_ms=1000ms          : sets the interval between two commits. Since messages are coming in every five second, committing every second seems fair.
-    # group_id='twitter_data_analysis'        :this is the consumer group to which the consumer belongs. Remember from the introduction that a consumer needs to be part of a consumer group to make the auto commit work.
-    # The value deserializer deserializes the data into a common json format, the inverse of what our value serializer was doing.
-    consumer = KafkaConsumer(
-        topic_name,
-        bootstrap_servers=['localhost:9092'],
-        auto_offset_reset='earliest',
-        enable_auto_commit=True,
-        group_id='twitter_data_analysis',
-        value_deserializer=lambda x: json.loads(x.decode('utf-8')))
+    # import kafka libraries to run code from terminal
+    os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.0.2 pyspark-shell'
 
-    for msg in consumer:
-        print(msg.value)
+    # Setup spark conf
+    sparkConf = SparkConf("TwitterDataAnalysis")
+
+    # Create spark context from above configuration
+    sc = SparkContext(conf=sparkConf)
+
+    # Set log level to error
+    sc.setLogLevel("ERROR")
+
+    # Create Streaming context
+    # Get data from stream every 5 secs
+    ssc = StreamingContext(sc, 5)
+
+    # Setup checkpoint for RDD recovery
+    ssc.checkpoint("checkpointTwitterApp")
+
+    # Parameters for connecting to kafka
+    kafkaParam = {
+            "zookeeper.connect": 'localhost:2181',
+            "group.id": 'twitter_data_analysis',
+            "zookeeper.connection.timeout.ms": "10000",
+            "bootstrap.servers": "localhost:9092"
+    }
+
+    # Creating Dstream by taking input from Kafka
+    kafkaStream = KafkaUtils.createDirectStream(ssc, [topic_name], kafkaParams = kafkaParam, valueDecoder=lambda x: json.loads(x.decode('utf-8')))
+    
+    # Print count of tweets in a particular batch
+    kafkaStream.count().pprint()
+
+    # Tweet from user
+    tweets = kafkaStream.map(lambda v: v[1]["text"])
+
+    # print tweets    
+    tweets.pprint()
+
+    # Start Streaming Context
+    ssc.start()
+    ssc.awaitTermination()
