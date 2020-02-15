@@ -1,14 +1,51 @@
 from pyspark import SparkContext, SparkConf
 from pyspark.streaming import StreamingContext
 from pyspark.streaming.kafka import KafkaUtils
-import json, os
+from pyspark.sql import Row, SQLContext
+import json, sys
+from os import environ
 
 topic_name = "twitter"
+
+# class AnalyzeTweets():
+def sum_all_tags(new_values, last_sum):
+    if last_sum is None:
+        return sum(new_values)
+    return sum(new_values) + last_sum
+
+def getSparkSessionInstance(spark_context):
+    # Creaating the gloabal instance only once
+    if ('sparkSessionSingletonInstance' not in globals()):
+        globals()['sparkSessionSingletonInstance'] = SQLContext(spark_context)
+    return globals()['sparkSessionSingletonInstance']
+
+def process_hashtags(time, rdd):
+    print("---------{}--------".format(time))
+    try:
+        # Get the Spark SQL context
+        spark_sql = getSparkSessionInstance(rdd.context)
+
+        # Convert RDD[String] to RDD[Row] to DataFrame
+        rowRdd = rdd.map(lambda tag: Row(hashtag=tag[0], frequency=tag[1]))
+
+        #Create Dataset
+        wordsDataFrame = spark_sql.createDataFrame(rowRdd)
+
+        # # # Creates a temporary view using the DataFrame
+        wordsDataFrame.createOrReplaceTempView("hashtags")
+
+        # # Select top 10 hashtags according to frequency
+        wordCountsDataFrame = spark_sql.sql("select hashtag, frequency from hashtags order by frequency desc limit 10")
+        wordCountsDataFrame.show()
+
+    except:
+        e = sys.exc_info()[0]
+        print(e)
 
 if __name__ == "__main__":
 
     # import kafka libraries to run code from terminal
-    os.environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.0.2 pyspark-shell'
+    environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.0.2 pyspark-shell'
 
     # Setup spark conf
     sparkConf = SparkConf("TwitterDataAnalysis")
@@ -35,16 +72,18 @@ if __name__ == "__main__":
     }
 
     # Creating Dstream by taking input from Kafka
-    kafkaStream = KafkaUtils.createDirectStream(ssc, [topic_name], kafkaParams = kafkaParam, valueDecoder=lambda x: json.loads(x.decode('utf-8')))
+    tweets = KafkaUtils.createDirectStream(ssc, [topic_name], kafkaParams = kafkaParam)
     
     # Print count of tweets in a particular batch
-    kafkaStream.count().pprint()
+    # tweets.count().pprint()
 
-    # Tweet from user
-    tweets = kafkaStream.map(lambda v: v[1]["text"])
+    # Split tweets into words
+    words = tweets.map(lambda v: v[1]).flatMap(lambda t: t.split(" "))
 
-    # print tweets    
-    tweets.pprint()
+    # Get hashtags from tweet and create a new DStream by adding their count to previos DStream count
+    hashtags = words.filter(lambda tag: len(tag)>2 and '#' == tag[0]).countByValue().updateStateByKey(sum_all_tags)
+
+    hashtags.foreachRDD(process_hashtags)
 
     # Start Streaming Context
     ssc.start()
