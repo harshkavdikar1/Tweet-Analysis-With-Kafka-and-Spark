@@ -131,3 +131,7 @@ dmypy.json
 .vscode/
 
 checkpointTwitterApp/
+
+node_modules/
+
+package-lock.json
