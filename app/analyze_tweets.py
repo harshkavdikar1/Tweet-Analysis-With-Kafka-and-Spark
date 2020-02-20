@@ -5,6 +5,7 @@ from pyspark.sql import Row, SQLContext
 import json
 import sys
 from os import environ
+from kafka import KafkaProducer
 
 topic_name = "twitter"
 
@@ -65,6 +66,8 @@ def send_to_kafka(hashtagCountsDataFrame):
     for hashtag, frequency in hashtagCountsDataFrame.collect():
         top_hashtags[hashtag] = frequency
 
+    print("Trending HashTags = ", top_hashtags)
+
     producer = getKafkaInstance()
 
     producer.send(dashboard_topic_name, value=top_hashtags)
@@ -89,8 +92,8 @@ if __name__ == "__main__":
     sc.setLogLevel("ERROR")
 
     # Create Streaming context
-    # Get data from stream every 5 secs
-    ssc = StreamingContext(sc, 2)
+    # Get data from stream every 60 secs
+    ssc = StreamingContext(sc, 60)
 
     # Setup checkpoint for RDD recovery
     ssc.checkpoint("checkpointTwitterApp")
@@ -108,7 +111,7 @@ if __name__ == "__main__":
         ssc, [topic_name], kafkaParams=kafkaParam, valueDecoder=lambda x: json.loads(x.decode('utf-8')))
 
     # Print count of tweets in a particular batch
-    # tweets.count().pprint()
+    tweets.count().pprint()
 
     # Split tweets into words
     words = tweets.map(lambda v: v[1]["text"]).flatMap(lambda t: t.split(" "))
