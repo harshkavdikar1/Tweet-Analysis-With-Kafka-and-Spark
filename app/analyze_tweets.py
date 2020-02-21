@@ -6,10 +6,12 @@ import json
 import sys
 from os import environ
 from kafka import KafkaProducer
+from configparser import ConfigParser
 
-topic_name = "twitter"
 
-dashboard_topic_name = "processedtweets"
+def set_global_topic_name(config):
+    # Set topic name as global variable
+    globals()['dashboard_topic_name'] = config['Resources']['dashboard_topic_name']
 
 
 def sum_all_tags(new_values, last_sum):
@@ -34,7 +36,7 @@ def getKafkaInstance():
 
 
 def process_hashtags(time, rdd):
-    print("---------{}--------".format(time))
+    # print("---------{}--------".format(time))
     try:
         # Get the Spark SQL context
         spark_sql = getSparkSessionInstance(rdd.context)
@@ -53,6 +55,8 @@ def process_hashtags(time, rdd):
             "select hashtag, frequency from hashtags order by frequency desc limit 10")
         # hashtagCountsDataFrame.show()
 
+        # Send top 10 hashtags to kafka topic so that
+        # it is picked up by server side script
         send_to_kafka(hashtagCountsDataFrame)
 
     except:
@@ -63,6 +67,8 @@ def process_hashtags(time, rdd):
 def send_to_kafka(hashtagCountsDataFrame):
 
     top_hashtags = {}
+
+    # Extract top 10 hashtags from RDD
     for hashtag, frequency in hashtagCountsDataFrame.collect():
         top_hashtags[hashtag] = frequency
 
@@ -70,13 +76,25 @@ def send_to_kafka(hashtagCountsDataFrame):
 
     producer = getKafkaInstance()
 
-    producer.send(dashboard_topic_name, value=top_hashtags)
+    # Send hashtags to kafka topic
+    producer.send(globals()['dashboard_topic_name'], value=top_hashtags)
 
 
 if __name__ == "__main__":
 
+    config = ConfigParser()
+
+    #Read conf file
+    config.read("..\conf\hashtags.conf")
+
+    # Set topic name
+    set_global_topic_name(config)
+
+    # Read pyspark submit path from conf file
+    pyspark_environ = config['Resources']['pyspark_environ']
+
     # import kafka libraries to run code from terminal
-    environ['PYSPARK_SUBMIT_ARGS'] = '--packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.0.2 pyspark-shell'
+    environ['PYSPARK_SUBMIT_ARGS'] = pyspark_environ
 
     # Setup spark conf
     sparkConf = SparkConf("TwitterDataAnalysis")
@@ -98,17 +116,23 @@ if __name__ == "__main__":
     # Setup checkpoint for RDD recovery
     ssc.checkpoint("checkpointTwitterApp")
 
+    # Reading parameters from conf file
+    bootstap_server = config['Kafka_param']['bootstrap.servers']
+    zookeeper = config['Kafka_param']['zookeeper.connect']
+    group_id = config['Kafka_param']['group.id']
+    timeout = config['Kafka_param']['zookeeper.connection.timeout.ms']
+
     # Parameters for connecting to kafka
     kafkaParam = {
-        "zookeeper.connect": 'localhost:2181',
-        "group.id": 'twitter_data_analysis',
-        "zookeeper.connection.timeout.ms": "10000",
-        "bootstrap.servers": "localhost:9092"
+        "zookeeper.connect": zookeeper,
+        "group.id": group_id,
+        "zookeeper.connection.timeout.ms": timeout,
+        "bootstrap.servers": bootstap_server
     }
 
     # Creating Dstream by taking input from Kafka
     tweets = KafkaUtils.createDirectStream(
-        ssc, [topic_name], kafkaParams=kafkaParam, valueDecoder=lambda x: json.loads(x.decode('utf-8')))
+        ssc, [config['Resources']['app_topic_name']], kafkaParams=kafkaParam, valueDecoder=lambda x: json.loads(x.decode('utf-8')))
 
     # Print count of tweets in a particular batch
     tweets.count().pprint()
@@ -120,6 +144,7 @@ if __name__ == "__main__":
     hashtags = words.filter(lambda tag: len(
         tag) > 2 and '#' == tag[0]).countByValue().updateStateByKey(sum_all_tags)
 
+    # Process each DStream
     hashtags.foreachRDD(process_hashtags)
 
     # Start Streaming Context
