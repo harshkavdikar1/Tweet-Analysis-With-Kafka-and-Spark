@@ -72,7 +72,7 @@ def send_to_kafka(hashtagCountsDataFrame):
     for hashtag, frequency in hashtagCountsDataFrame.collect():
         top_hashtags[hashtag] = frequency
 
-    print("Trending HashTags = ", top_hashtags)
+    # print("Trending HashTags = ", top_hashtags)
 
     producer = getKafkaInstance()
 
@@ -135,7 +135,7 @@ if __name__ == "__main__":
         ssc, [config['Resources']['app_topic_name']], kafkaParams=kafkaParam, valueDecoder=lambda x: json.loads(x.decode('utf-8')))
 
     # Print count of tweets in a particular batch
-    tweets.count().pprint()
+    # tweets.count().pprint()
 
     # Split tweets into words
     words = tweets.map(lambda v: v[1]["text"]).flatMap(lambda t: t.split(" "))
