@@ -2,19 +2,14 @@ import tweepy
 import json
 import sys
 from kafka import KafkaProducer
-
-consumer_key = "fEXkjFzTUu4QNPExgdThQjhdg"
-consumer_secret = "gKmpJp2FqhdYaambKL69NHxirtY3E2tiiGX0Fw7rXKiNhG4evX"
-access_token = "882245118182408192-PwUJYU0Clh9zIfwkOM4AP2473vRmOlO"
-access_secret = "J6GFLRBxX1OepK0IXYUxGYWWu0mWrxCmytjQaMSGad3PK"
-
-topic_name = "twitter"
+from configparser import ConfigParser
 
 
 class Listener(tweepy.StreamListener):
 
-    def __init__(self, kafka_producer):
+    def __init__(self, kafka_producer, topic_name):
         self.producer = kafka_producer
+        self.topic_name = topic_name
         self.count = 0
 
     def on_data(self, raw_data):
@@ -26,14 +21,10 @@ class Listener(tweepy.StreamListener):
         if "extended_tweet" in data:
             text = data["extended_tweet"]["full_text"]
         if '#' in text:
-            self.producer.send(topic_name, value={"text": text})
-            # self.producer.flush()
-        # for i in data:
-        #     print(i, " == ", data[i])
-            print(self.count, text)
+            self.producer.send(self.topic_name, value={"text": text})
             self.count += 1
-        # if self.count >= 50:
-        #     sys.exit()
+            if self.count % 100 == 0:
+                print("Number of tweets sent = ", self.count)
 
     def on_error(self, status_code):
         if status_code == 420:
@@ -53,6 +44,11 @@ class StreamTweets():
 
 if __name__ == "__main__":
 
+    config = ConfigParser()
+    config.read("..\conf\hashtags.conf")
+
+    bootstap_server = config['Kafka_param']['bootstrap.servers']
+
     # bootstrap_servers=[‘localhost:9092’] : sets the host and port the producer
     # should contact to bootstrap initial cluster metadata. It is not necessary to set this here,
     # since the default is localhost:9092.
@@ -60,18 +56,23 @@ if __name__ == "__main__":
     # value_serializer=lambda x: dumps(x).encode(‘utf-8’): function of how the data
     # should be serialized before sending to the broker. Here, we convert the data to
     # a json file and encode it to utf-8.
-    producer = KafkaProducer(bootstrap_servers=['localhost:9092'],
+    producer = KafkaProducer(bootstrap_servers=[bootstap_server],
                              value_serializer=lambda v: json.dumps(v).encode('utf-8'))
 
-    listener = Listener(producer)
+    listener = Listener(producer, config['Resources']['app_topic_name'])
+
+    consumer_key = config['API_details']['consumer_key']
+    consumer_secret = config['API_details']['consumer_secret']
+    access_token = config['API_details']['access_token']
+    access_secret = config['API_details']['access_secret']
 
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_secret)
 
     stream = StreamTweets(auth, listener)
 
-    # San Fransisco
-    location = [-122.75, 36.8, -121.75, 37.8]
-    language = ['en']
-    track_keywords = ['#']
+    # Converting string to float to get cordinates
+    location = [float(x) for x in config['API_param']['location'].split(',')]
+    language = config['API_param']['language'].split(' ')
+    track_keywords = config['API_param']['track_keywords'].split(' ')
     stream.start(location, language, track_keywords)
