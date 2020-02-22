@@ -48,7 +48,7 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
 
 </br>
 
-<b>How it works</b>
+## How it works
 <ol>
     <li>Extract data from Twitter's streaming API and put it into Kakfa topic.</li>
     <li>Spark is listening to this topic, it will read the data from topic, analyze it is using spark streaming and put top 10 trending hashtags and @mentions into another kafka topic.</li>
