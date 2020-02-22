@@ -1,5 +1,5 @@
 # Tweet Analysis using Kafka and Spark Streaming
 
-![hashtags][hashtags.png]
+![hashtags](hashtags.png)
 
-![mentions][mentions.png]
+![mentions](mentions.png)
