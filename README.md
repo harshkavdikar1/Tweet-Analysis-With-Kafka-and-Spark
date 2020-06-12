@@ -4,7 +4,7 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
 
 ## Installation Guide
 
-> Download and Install Kafka, Spark, Python and npm. 
+#### Download and Install Kafka, Spark, Python and npm. 
 <ol>
 <li> You can refer to following guide to install kafka. </li>  
 
