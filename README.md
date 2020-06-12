@@ -37,18 +37,25 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
 
 <li> Install Python dependencies. </li>
 
-> pip install -r requirements.txt
+```
+ pip install -r requirements.txt
+```
 
 <li> Start Zookeeper </li>
 
-> Open cmd and type zkserver
+> Open cmd and execute
+
+```
+zkserver
+```
 
 <li> Start Kafka </li>
 
 > Go to Kafka installation directory. ..\kafka_2.11-2.3.1\bin\windows. Open cmd here and execute following command.
 
-> kafka-server-start.bat C:\ProgramData\Java\kafka_2.11-2.3.1\config\server.properties
-
+```
+kafka-server-start.bat C:\ProgramData\Java\kafka_2.11-2.3.1\config\server.properties
+```
 
 
 </ul>
