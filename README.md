@@ -65,6 +65,13 @@ zkserver
 kafka-server-start.bat C:\ProgramData\Java\kafka_2.11-2.3.1\config\server.properties
 ```
 
+<li> Run python file to fetch tweets. </li>
+
+```
+python fetch_tweets.py
+```
+
+
 
 </ul>
 <br>
