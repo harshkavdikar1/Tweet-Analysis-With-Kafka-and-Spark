@@ -77,6 +77,11 @@ python fetch_tweets.py
 python analyze_tweets.py
 ```
 
+<li> Start npm server </li>
+
+```
+npm start
+```
 
 </ul>
 <br>
