@@ -2,6 +2,12 @@
 
 Built a real-time analytics dashboard to visualize the trending hashtags and @mentions at a given location by using real time streaming twitter API to get data.
 
+## Installation Guide
+
+> Download and Install Kafka, Spark, Python and npm.  
+> You can refer to following guide to install kafka.  
+> https://towardsdatascience.com/running-zookeeper-kafka-on-windows-10-14fc70dcc771
+
 
 <br>
 
@@ -27,7 +33,7 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
 		<td>Back-End</td>
 		<td>Express, Node.js</td>
 	</tr>
-  <tr>
+    <tr>
 		<td>Cluster Computing Framework</td>
 		<td>Apache Spark (python)</td>
 	</tr>
