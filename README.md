@@ -27,6 +27,12 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
 
 > https://dzone.com/articles/running-apache-kafka-on-windows-os
 
+<li> Or run following command </li>
+
+> kafka-topics.bat --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic twitter
+
+</ul>
+
 
 </ul>
 </ul>
