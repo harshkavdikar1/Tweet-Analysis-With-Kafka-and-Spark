@@ -43,6 +43,13 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
 
 > Open cmd and type zkserver
 
+<li> Start Kafka </li>
+
+> Go to Kafka installation directory. ..\kafka_2.11-2.3.1\bin\windows. Open cmd here and execute following command.
+
+> kafka-server-start.bat C:\ProgramData\Java\kafka_2.11-2.3.1\config\server.properties
+
+
 
 </ul>
 </ul>
