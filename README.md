@@ -41,6 +41,14 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
  pip install -r requirements.txt
 ```
 
+<li> Install Node js dependencies. </li>
+
+```
+npm install kafka-node  
+
+npm install highcharts
+```
+
 <li> Start Zookeeper </li>
 
 > Open cmd and execute
@@ -58,7 +66,6 @@ kafka-server-start.bat C:\ProgramData\Java\kafka_2.11-2.3.1\config\server.proper
 ```
 
 
-</ul>
 </ul>
 <br>
 
