@@ -18,6 +18,20 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
 
 <br>
 
+##  How to run the code.
+
+<ul>
+<li> Create kafka topic. </li>
+<ul>
+<li> You can refer to below link </li>
+
+> https://dzone.com/articles/running-apache-kafka-on-windows-os
+
+
+</ul>
+</ul>
+<br>
+
 ## Technology stack
 
 ![stack](stack.png)
