@@ -71,6 +71,11 @@ kafka-server-start.bat C:\ProgramData\Java\kafka_2.11-2.3.1\config\server.proper
 python fetch_tweets.py
 ```
 
+<li> Run python file to analyze tweets. </li>
+
+```
+python analyze_tweets.py
+```
 
 
 </ul>
