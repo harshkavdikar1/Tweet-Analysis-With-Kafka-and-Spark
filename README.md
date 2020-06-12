@@ -35,6 +35,14 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
 
 <li> Update conf file with your secret key and access tokens. </li>
 
+<li> Install Python dependencies. </li>
+
+> pip install -r requirements.txt
+
+<li> Start Zookeeper </li>
+
+> Open cmd and type zkserver
+
 
 </ul>
 </ul>
