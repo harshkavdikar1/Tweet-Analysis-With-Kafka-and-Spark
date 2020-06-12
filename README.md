@@ -33,6 +33,8 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
 
 </ul>
 
+<li> Update conf file with your secret key and access tokens. </li>
+
 
 </ul>
 </ul>
