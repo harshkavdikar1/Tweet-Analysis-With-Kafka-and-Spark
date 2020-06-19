@@ -44,9 +44,7 @@ Built a real-time analytics dashboard to visualize the trending hashtags and @me
 <li> Install Node js dependencies. </li>
 
 ```
-npm install kafka-node  
-
-npm install highcharts
+npm install
 ```
 
 <li> Start Zookeeper </li>
